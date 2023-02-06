@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
+        <meta name="description" content="" />
+        <meta name="author" content="" />
+        <title>Scrolling Nav - Start Bootstrap Template</title>
+        <!-- Core theme CSS (includes Bootstrap)-->
+        <link href="css/styles.css" rel="stylesheet" />
+    </head>
+    <body id="page-top">
+        <!-- Navigation-->
+        <nav class="navbar navbar-expand-lg navbar-dark bg-dark fixed-top" id="mainNav">
+            <div class="container px-4">
+                <a class="navbar-brand" href="#page-top">A3 - Flights</a>
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarResponsive" aria-controls="navbarResponsive" aria-expanded="false" aria-label="Toggle navigation"><span class="navbar-toggler-icon"></span></button>
+                <div class="collapse navbar-collapse" id="navbarResponsive">
+                    <ul class="navbar-nav ms-auto">
+                        <li class="nav-item"><a class="nav-link" href="#visualization">Visualization</a></li>
+                        <li class="nav-item"><a class="nav-link" href="#writeup">Write Up</a></li>
+                    </ul>
+                </div>
+            </div>
+        </nav>
+        <!-- Visualization section-->
+        <section id="visualization">
+            <div class="container px-4">
+                <div class="row gx-4 justify-content-center">
+                    <div class="col-lg-8">
+                        <h2>Replace Me with a title for the visualization</h2>
+                        <p class="lead">Add some further description here if you see fit:</p>
+                        <div id="graph">
+                        </div>
+                        <div id="tooltip" class="hidden">
+                            <p><strong>Important Label Heading</strong></p>
+                            <p><span id="value">100</span>%</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+        <!-- Writeup section-->
+        <section class="bg-light" id="writeup">
+            <div class="container px-4">
+                <div class="row gx-4 justify-content-center">
+                    <div class="col-lg-8">
+                        <h2>Write Up:</h2>
+                        <p class="lead">We made the decisions because of .....</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+        <!-- Bootstrap core JS-->
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+        <!-- Core theme JS-->
+        <script src="js/scripts.js"></script>
+        <!-- D3 JS -->
+        <script src="https://d3js.org/d3.v7.min.js"></script>
+        <script>
+            //Width, height, and padding
+            var w = 800;
+            var h = 500;
+            var padding = 40;
+
+            //Function for converting CSV values from strings to Dates and numbers
+			var rowConverter = function(d) {
+				return {
+					Date: parseTime(d.Date),
+					Amount: parseInt(d.Amount)
+				};
+			}
+
+            var dataset = [ 5, 10, 13, 19, 21, 25, 22, 18, 15, 13,
+                            11, 12, 15, 20, 18, 17, 16, 18, 23, 25 ];
+
+            var xScale = d3.scaleBand()
+                            .domain(d3.range(dataset.length))
+                            .rangeRound([padding, w - padding])
+                            .paddingInner(0.05);
+
+            var yScale = d3.scaleLinear()
+                            .domain([0, d3.max(dataset)])
+                            .range([h - padding, padding]);
+
+            //Define Y axis
+            xAxis = d3.axisBottom()
+                    .scale(xScale)
+                    .ticks(9);
+
+            //Define Y axis
+            yAxis = d3.axisLeft()
+                    .scale(yScale)
+                    .ticks(10);
+
+            //Create SVG element
+            var svg = d3.select("#graph")
+                        .append("svg")
+                        .attr("width", w)
+                        .attr("height", h);
+
+            //Create bars
+            svg.selectAll("rect")
+            .data(dataset)
+            .enter()
+            .append("rect")
+            .attr("x", function(d, i) {
+                    return xScale(i);
+            })
+            .attr("y", function(d) {
+                    return yScale(d);
+            })
+            .attr("width", xScale.bandwidth())
+            .attr("height", function(d) {
+                    return h - yScale(d) - padding;
+            })
+            .attr("fill", function(d) {
+                    return "rgb(0, 0, " + Math.round(d * 10) + ")";
+            })
+            .on("mouseover", function(d) {
+                    //Get this bar's x/y values, then augment for the tooltip
+                    var xPosition = parseFloat(d3.select(this).attr("x")) + (5 * xScale.bandwidth()) / 2;
+                    var yPosition = parseFloat(d3.select(this).attr("y")) / 2 + h / 2;
+
+                    //Update the tooltip position and value
+                    d3.select("#tooltip")
+                        .style("left", xPosition + "px")
+                        .style("top", yPosition + "px")						
+                        .select("#value")
+                        .text(d.srcElement.__data__);
+            
+                    //Show the tooltip
+                    d3.select("#tooltip").classed("hidden", false);
+
+            })
+            .on("mouseout", function() {
+            
+                    //Hide the tooltip
+                    d3.select("#tooltip").classed("hidden", true);
+                    
+            })
+            .on("click", function() {
+                    sortBars();
+            });
+
+            //Define sort order flag
+            var sortOrder = false;
+
+            //Define sort function
+            var sortBars = function() {
+
+                //Flip value of sortOrder
+                sortOrder = !sortOrder;
+
+                svg.selectAll("rect")
+                .sort(function(a, b) {
+                        if (sortOrder) {
+                            return d3.ascending(a, b);
+                        } else {
+                            return d3.descending(a, b);
+                        }
+                    })
+                .transition()
+                .delay(function(d, i) {
+                    return i * 50;
+                })
+                .duration(1000)
+                .attr("x", function(d, i) {
+                        return xScale(i);
+                });
+
+            };
+
+            svg.append("g")
+	   				.attr("class", "axis")
+	   				.attr("transform", "translate(0," + (h - padding) + ")")
+	   				.call(xAxis);
+
+            svg.append("g")
+                .attr("class", "axis")
+                .attr("transform", "translate(" + padding + ",0)")
+                .call(yAxis);
+        </script>
+    </body>
+</html>
