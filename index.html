@@ -71,27 +71,24 @@
 				};
 			}
 
-            var dataset = [ 5, 10, 13, 19, 21, 25, 22, 18, 15, 13,
-                            11, 12, 15, 20, 18, 17, 16, 18, 23, 25 ];
+            var dataset = [ 5, 10, 13, 19, 21, 25, 22, 18, 15, 13 ];
 
-            var xScale = d3.scaleBand()
+            var yScale = d3.scaleBand()
                             .domain(d3.range(dataset.length))
-                            .rangeRound([padding, w - padding])
+                            .rangeRound([padding, h - padding])
                             .paddingInner(0.05);
 
-            var yScale = d3.scaleLinear()
+            var xScale = d3.scaleLinear()
                             .domain([0, d3.max(dataset)])
-                            .range([h - padding, padding]);
+                            .range([padding, w - padding]);
 
             //Define Y axis
             xAxis = d3.axisBottom()
-                    .scale(xScale)
-                    .ticks(9);
+                    .scale(xScale);
 
             //Define Y axis
             yAxis = d3.axisLeft()
-                    .scale(yScale)
-                    .ticks(10);
+                    .scale(yScale);
 
             //Create SVG element
             var svg = d3.select("#graph")
@@ -104,23 +101,23 @@
             .data(dataset)
             .enter()
             .append("rect")
-            .attr("x", function(d, i) {
-                    return xScale(i);
+            .attr("x", function(d) {
+                    return padding;
             })
-            .attr("y", function(d) {
-                    return yScale(d);
+            .attr("y", function(d, i) {
+                    return yScale(i);
             })
-            .attr("width", xScale.bandwidth())
-            .attr("height", function(d) {
-                    return h - yScale(d) - padding;
+            .attr("width", function(d) {
+                    return xScale(d) - padding;
             })
+            .attr("height", yScale.bandwidth())
             .attr("fill", function(d) {
                     return "rgb(0, 0, " + Math.round(d * 10) + ")";
             })
             .on("mouseover", function(d) {
                     //Get this bar's x/y values, then augment for the tooltip
-                    var xPosition = parseFloat(d3.select(this).attr("x")) + (5 * xScale.bandwidth()) / 2;
-                    var yPosition = parseFloat(d3.select(this).attr("y")) / 2 + h / 2;
+                    var yPosition = parseFloat(d3.select(this).attr("y")) + (5 * yScale.bandwidth()) / 2;
+                    var xPosition = parseFloat(d3.select(this).attr("x")) / 2 + h / 2;
 
                     //Update the tooltip position and value
                     d3.select("#tooltip")
@@ -165,8 +162,8 @@
                     return i * 50;
                 })
                 .duration(1000)
-                .attr("x", function(d, i) {
-                        return xScale(i);
+                .attr("y", function(d, i) {
+                        return yScale(i);
                 });
 
             };
