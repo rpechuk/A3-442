@@ -8,6 +8,8 @@
         <title>Scrolling Nav - Start Bootstrap Template</title>
         <!-- Core theme CSS (includes Bootstrap)-->
         <link href="css/styles.css" rel="stylesheet" />
+        <!-- Scrubber theme -->
+        <link href="css/scrubber.css" rel="stylesheet" />
     </head>
     <body id="page-top">
         <!-- Navigation-->
@@ -30,11 +32,13 @@
                     <div class="col-lg-8">
                         <h2>Replace Me with a title for the visualization</h2>
                         <p class="lead">Add some further description here if you see fit:</p>
-                        <div id="graph">
+                        <div id="scrubber">
+                            <p class="lead">Year: <span id="year">0</span></p>
                         </div>
+                        <div id="graph"></div>
                         <div id="tooltip" class="hidden">
-                            <p><strong>Important Label Heading</strong></p>
-                            <p><span id="value">100</span>%</p>
+                            <p><strong>Flights to <span id="airport">XYZ</span>:</strong></p>
+                            <p><span id="flights">0</span> flights</p>
                         </div>
                     </div>
                 </div>
@@ -55,39 +59,72 @@
         <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
         <!-- Core theme JS-->
         <script src="js/scripts.js"></script>
+        <!-- Scrubber theme JS-->
+        <script src="js/scrubber.js"></script>
         <!-- D3 JS -->
         <script src="https://d3js.org/d3.v7.min.js"></script>
-        <script>
+        <script type="module">
+
+            var scrubber = new ScrubberView();
+            document.getElementById("scrubber").appendChild(scrubber.elt);
+            scrubber.onValueChanged = function (value) {
+                d3.select("#scrubber").select("#year").text(value);
+            }
+
+
             //Width, height, and padding
             var w = 800;
             var h = 500;
             var padding = 40;
+            var topX = 15;
 
-            //Function for converting CSV values from strings to Dates and numbers
-			var rowConverter = function(d) {
-				return {
-					Date: parseTime(d.Date),
-					Amount: parseInt(d.Amount)
-				};
-			}
+            var dt = await aq.loadCSV('/assets/International_Report_Passengers.csv');
 
-            var dataset = [ 5, 10, 13, 19, 21, 25, 22, 18, 15, 13 ];
+            var years = d3.extent(dt.objects(), d => d.Year);
+
+            var dataset = [];
+
+            for(var i = 0; i <= years[1] - years[0]; i++) {
+                var year = years[0] + i;
+                var dtNew = dt.filter(aq.escape(d => d.Year == year))
+                    .groupby("Destination")
+                    .rollup({
+                        total_flights: d => op.sum(d.Flights),
+                        count: aq.op.count()
+                    })
+                    .derive({
+                        Year: year
+                    })
+                    .orderby(aq.desc('total_flights'))
+                    .slice(0, topX);
+                dataset = dataset.concat(dtNew.objects());
+            }
+
+            console.log(dataset);
+            dataset = dataset.filter(d => d.Year === years[1]);
+
+            var destinations = [...new Set(dataset.map(d => d.Destination))]
 
             var yScale = d3.scaleBand()
-                            .domain(d3.range(dataset.length))
+                            .domain(destinations)
                             .rangeRound([padding, h - padding])
                             .paddingInner(0.05);
 
             var xScale = d3.scaleLinear()
-                            .domain([0, d3.max(dataset)])
+                            .domain([0, d3.max(dataset, d => d.total_flights)])
                             .range([padding, w - padding]);
 
+
+            var colorScale = d3.scaleLinear()
+                            .domain([0, d3.max(dataset, d => d.total_flights)])
+                            .range([150, 255]);
+
             //Define Y axis
-            xAxis = d3.axisBottom()
+            var xAxis = d3.axisBottom()
                     .scale(xScale);
 
             //Define Y axis
-            yAxis = d3.axisLeft()
+            var yAxis = d3.axisLeft()
                     .scale(yScale);
 
             //Create SVG element
@@ -95,7 +132,6 @@
                         .append("svg")
                         .attr("width", w)
                         .attr("height", h);
-
             //Create bars
             svg.selectAll("rect")
             .data(dataset)
@@ -104,79 +140,53 @@
             .attr("x", function(d) {
                     return padding;
             })
-            .attr("y", function(d, i) {
-                    return yScale(i);
+            .attr("y", function(d) {
+                    return yScale(d.Destination);
             })
             .attr("width", function(d) {
-                    return xScale(d) - padding;
+                    return xScale(d.total_flights) - padding;
             })
             .attr("height", yScale.bandwidth())
             .attr("fill", function(d) {
-                    return "rgb(0, 0, " + Math.round(d * 10) + ")";
+                    return "rgb(0, 0, " + colorScale(d.total_flights) + ")";
             })
             .on("mouseover", function(d) {
                     //Get this bar's x/y values, then augment for the tooltip
-                    var yPosition = parseFloat(d3.select(this).attr("y")) + (5 * yScale.bandwidth()) / 2;
-                    var xPosition = parseFloat(d3.select(this).attr("x")) / 2 + h / 2;
+                    var yPosition = parseFloat(d3.select(this).attr("y")) + (4.5 * yScale.bandwidth());
+                    var xPosition = parseFloat(d3.select(this).attr("x")) + parseFloat(d3.select(this).attr("width")) + w / 4;
 
                     //Update the tooltip position and value
-                    d3.select("#tooltip")
+                    var tooltip = d3.select("#tooltip")
                         .style("left", xPosition + "px")
-                        .style("top", yPosition + "px")						
-                        .select("#value")
-                        .text(d.srcElement.__data__);
-            
+                        .style("top", yPosition + "px")		
+                    				
+                    tooltip.select("#airport")
+                        .text(d.srcElement.__data__.Destination);
+                    tooltip.select("#flights")
+                        .text(d.srcElement.__data__.total_flights.toLocaleString("en-US"));
+
                     //Show the tooltip
                     d3.select("#tooltip").classed("hidden", false);
 
             })
             .on("mouseout", function() {
-            
+
                     //Hide the tooltip
                     d3.select("#tooltip").classed("hidden", true);
                     
-            })
-            .on("click", function() {
-                    sortBars();
             });
 
-            //Define sort order flag
-            var sortOrder = false;
-
-            //Define sort function
-            var sortBars = function() {
-
-                //Flip value of sortOrder
-                sortOrder = !sortOrder;
-
-                svg.selectAll("rect")
-                .sort(function(a, b) {
-                        if (sortOrder) {
-                            return d3.ascending(a, b);
-                        } else {
-                            return d3.descending(a, b);
-                        }
-                    })
-                .transition()
-                .delay(function(d, i) {
-                    return i * 50;
-                })
-                .duration(1000)
-                .attr("y", function(d, i) {
-                        return yScale(i);
-                });
-
-            };
-
             svg.append("g")
-	   				.attr("class", "axis")
-	   				.attr("transform", "translate(0," + (h - padding) + ")")
-	   				.call(xAxis);
+                    .attr("class", "axis")
+                    .attr("transform", "translate(0," + (h - padding) + ")")
+                    .call(xAxis);
 
             svg.append("g")
                 .attr("class", "axis")
                 .attr("transform", "translate(" + padding + ",0)")
                 .call(yAxis);
         </script>
+        <!-- Arquero import -->
+        <script src="https://cdn.jsdelivr.net/npm/arquero@latest"></script>
     </body>
 </html>
