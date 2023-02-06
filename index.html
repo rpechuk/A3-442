@@ -152,7 +152,7 @@
             })
             .on("mouseover", function(d) {
                     //Get this bar's x/y values, then augment for the tooltip
-                    var yPosition = parseFloat(d3.select(this).attr("y")) + (4.5 * yScale.bandwidth());
+                    var yPosition = parseFloat(d3.select(this).attr("y")) + (5 * yScale.bandwidth());
                     var xPosition = parseFloat(d3.select(this).attr("x")) + parseFloat(d3.select(this).attr("width")) + w / 4;
 
                     //Update the tooltip position and value
