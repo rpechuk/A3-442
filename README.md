@@ -5,9 +5,11 @@ To run on mac use:```python3 -m http.server```
 Then visist: http://0.0.0.0:8000/
 
 Tasks:
-- Convert to observable
-- Add slider functionality
-- Add color by continent
-- Find (make?) continent to airport map
+- Add slider functionality [Ron]
+- Find (make?) continent to airport map [Phuong]
     - generate final csv data file to use
-- Add legend 
+- Add color by continent [Menggy]
+- Add legend [Andrew]
+- Write Up [???]
+- Put our code into starter repo [All]
+- Convert to observable [Phuong]???

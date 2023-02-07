@@ -33,12 +33,12 @@
                         <h2>Replace Me with a title for the visualization</h2>
                         <p class="lead">Add some further description here if you see fit:</p>
                         <div id="scrubber">
-                            <p class="lead">Year: <span id="year">0</span></p>
+                            <p class="lead" id="scrubber-text">Year: <span id="year">0</span></p>
                         </div>
                         <div id="graph"></div>
                         <div id="tooltip" class="hidden">
                             <p><strong>Flights to <span id="airport">XYZ</span>:</strong></p>
-                            <p><span id="flights">0</span> flights</p>
+                            <p><span id="flights">1990</span> flights</p>
                         </div>
                     </div>
                 </div>
@@ -64,14 +64,6 @@
         <!-- D3 JS -->
         <script src="https://d3js.org/d3.v7.min.js"></script>
         <script type="module">
-
-            var scrubber = new ScrubberView();
-            document.getElementById("scrubber").appendChild(scrubber.elt);
-            scrubber.onValueChanged = function (value) {
-                d3.select("#scrubber").select("#year").text(value);
-            }
-
-
             //Width, height, and padding
             var w = 800;
             var h = 500;
@@ -81,27 +73,34 @@
             var dt = await aq.loadCSV('/assets/International_Report_Passengers.csv');
 
             var years = d3.extent(dt.objects(), d => d.Year);
+            var stepSize = 1;
+            var scrubber = new ScrubberView();
 
-            var dataset = [];
+            scrubber.min(years[0]).max(years[1]).step(stepSize).value(scrubber.min());
+            d3.select("#scrubber").select("#year").text(scrubber.value());
+
+            document.getElementById("scrubber").appendChild(scrubber.elt);
+
+            var datasetAll = [];
 
             for(var i = 0; i <= years[1] - years[0]; i++) {
                 var year = years[0] + i;
                 var dtNew = dt.filter(aq.escape(d => d.Year == year))
                     .groupby("Destination")
                     .rollup({
-                        total_flights: d => op.sum(d.Flights),
+                        total_passengers: d => op.sum(d.Passengers),
                         count: aq.op.count()
                     })
                     .derive({
                         Year: year
                     })
-                    .orderby(aq.desc('total_flights'))
+                    .orderby(aq.desc('total_passengers'))
                     .slice(0, topX);
-                dataset = dataset.concat(dtNew.objects());
+                    datasetAll = datasetAll.concat(dtNew.objects());
             }
 
-            console.log(dataset);
-            dataset = dataset.filter(d => d.Year === years[1]);
+            console.log(datasetAll);
+            var dataset = datasetAll.filter(d => d.Year === years[0]);
 
             var destinations = [...new Set(dataset.map(d => d.Destination))]
 
@@ -111,13 +110,13 @@
                             .paddingInner(0.05);
 
             var xScale = d3.scaleLinear()
-                            .domain([0, d3.max(dataset, d => d.total_flights)])
+                            .domain([0, d3.max(dataset, d => d.total_passengers)])
                             .range([padding, w - padding]);
 
 
             var colorScale = d3.scaleLinear()
-                            .domain([0, d3.max(dataset, d => d.total_flights)])
-                            .range([150, 255]);
+                            .domain([0, d3.max(dataset, d => d.total_passengers)])
+                            .range([100, 255]);
 
             //Define Y axis
             var xAxis = d3.axisBottom()
@@ -134,57 +133,98 @@
                         .attr("height", h);
             //Create bars
             svg.selectAll("rect")
-            .data(dataset)
-            .enter()
-            .append("rect")
-            .attr("x", function(d) {
-                    return padding;
-            })
-            .attr("y", function(d) {
-                    return yScale(d.Destination);
-            })
-            .attr("width", function(d) {
-                    return xScale(d.total_flights) - padding;
-            })
-            .attr("height", yScale.bandwidth())
-            .attr("fill", function(d) {
-                    return "rgb(0, 0, " + colorScale(d.total_flights) + ")";
-            })
-            .on("mouseover", function(d) {
-                    //Get this bar's x/y values, then augment for the tooltip
-                    var yPosition = parseFloat(d3.select(this).attr("y")) + (5 * yScale.bandwidth());
-                    var xPosition = parseFloat(d3.select(this).attr("x")) + parseFloat(d3.select(this).attr("width")) + w / 4;
+                .data(dataset)
+                .join("rect")
+                .attr("x", function(d) {
+                        return padding;
+                })
+                .attr("y", function(d) {
+                        return yScale(d.Destination);
+                })
+                .attr("width", function(d) {
+                        return xScale(d.total_passengers) - padding;
+                })
+                .attr("height", yScale.bandwidth())
+                .attr("fill", function(d) {
+                        return "rgb(0, 0, " + colorScale(d.total_passengers) + ")";
+                })
+                .on("mouseover", function(d) {
+                        //Get this bar's x/y values, then augment for the tooltip
+                        var yPosition = parseFloat(d3.select(this).attr("y")) + (6 * yScale.bandwidth());
+                        var xPosition = parseFloat(d3.select(this).attr("x")) + parseFloat(d3.select(this).attr("width")) + w / 4;
 
-                    //Update the tooltip position and value
-                    var tooltip = d3.select("#tooltip")
-                        .style("left", xPosition + "px")
-                        .style("top", yPosition + "px")		
-                    				
-                    tooltip.select("#airport")
-                        .text(d.srcElement.__data__.Destination);
-                    tooltip.select("#flights")
-                        .text(d.srcElement.__data__.total_flights.toLocaleString("en-US"));
+                        //Update the tooltip position and value
+                        var tooltip = d3.select("#tooltip")
+                            .style("left", xPosition + "px")
+                            .style("top", yPosition + "px")		
+                                        
+                        tooltip.select("#airport")
+                            .text(d.srcElement.__data__.Destination);
+                        tooltip.select("#flights")
+                            .text(d.srcElement.__data__.total_passengers.toLocaleString("en-US"));
 
-                    //Show the tooltip
-                    d3.select("#tooltip").classed("hidden", false);
+                        //Show the tooltip
+                        d3.select("#tooltip").classed("hidden", false);
 
-            })
-            .on("mouseout", function() {
-
-                    //Hide the tooltip
-                    d3.select("#tooltip").classed("hidden", true);
-                    
-            });
+                })
+                .on("mouseout", function() {
+                        //Hide the tooltip
+                        d3.select("#tooltip").classed("hidden", true);
+                        
+                });
 
             svg.append("g")
-                    .attr("class", "axis")
+                    .attr("id", "xAxis")
                     .attr("transform", "translate(0," + (h - padding) + ")")
                     .call(xAxis);
 
             svg.append("g")
-                .attr("class", "axis")
+                .attr("id", "yAxis")
                 .attr("transform", "translate(" + padding + ",0)")
                 .call(yAxis);
+
+            scrubber.onScrubEnd = function (value) {
+                d3.select("#scrubber").select("#year").text(value);
+                dataset = datasetAll.filter(d => d.Year === value);
+                destinations = [...new Set(dataset.map(d => d.Destination))]
+                xScale = d3.scaleLinear()
+                        .domain([0, d3.max(dataset, d => d.total_passengers)])
+                        .range([padding, w - padding]);
+                yScale = d3.scaleBand()
+                        .domain(destinations)
+                        .rangeRound([padding, h - padding])
+                        .paddingInner(0.05);
+                //Define X axis
+                xAxis = d3.axisBottom()
+                        .scale(xScale);
+
+                //Define Y axis
+                yAxis = d3.axisLeft()
+                        .scale(yScale);
+
+                svg.selectAll("rect")
+                    .data(dataset)
+                    .transition()
+                        .duration(1000)
+                        .attr("y", function(d) {
+                                return yScale(d.Destination);
+                        })
+                        .attr("width", function(d) {
+                                return xScale(d.total_passengers) - padding;
+                        })
+                        .attr("fill", function(d) {
+                                return "rgb(0, 0, " + colorScale(d.total_passengers) + ")";
+                        })
+                svg.select("#xAxis")
+                    .transition()
+                    .duration(1000)
+                    .call(xAxis);
+                svg.select("#yAxis")
+                    .transition()
+                    .duration(1000)
+                    .call(yAxis);
+            }
+
         </script>
         <!-- Arquero import -->
         <script src="https://cdn.jsdelivr.net/npm/arquero@latest"></script>
