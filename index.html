@@ -69,9 +69,9 @@
         <script src="https://d3js.org/d3.v7.min.js"></script>
         <script type="module">
             // Constants:
-            const w = 800;
-            const h = 500;
-            const padding = 40;
+            const w = 850;
+            const h = 550;
+            const padding = 65;
 
             const topX = 15;
             const stepSize = 1;
@@ -181,13 +181,32 @@
             svg.append("g")
                     .attr("id", "xAxis")
                     .attr("transform", "translate(0," + (h - padding) + ")")
-                    .call(d3.axisBottom().scale(xScale));
+                    .call(d3.axisBottom().scale(xScale))
+                    //Add x-axis label
+                    .append('text')
+                    .attr('text-anchor', 'end')
+                    .attr('fill', 'black')
+                    .attr('font-size', '18px')
+                    .attr('font-weight', '550')
+                    .attr('x', w / 2 + padding)
+                    .attr('y', 45)
+                    .text('Passengers');
+    ;
 
             svg.append("g")
                 .attr("id", "yAxis")
                 .attr("transform", "translate(" + padding + ",0)")
-                .call(d3.axisLeft().scale(yScale));
-            // Create labels
+                .call(d3.axisLeft().scale(yScale))
+                //Add y-axis label
+                .append('text')
+                .attr('transform', `translate(-45 ${h/2 - padding}) rotate(-90)`)
+                .attr('text-anchor', 'end')
+                .attr('fill', 'black')
+                .attr('font-size', '18px')
+                .attr('font-weight', '550')
+                .text('Airport Code');;
+            
+            // Create year label
             const yearLabel = svg.append('text')
                 .attr('class', 'year')
                 .attr('x', w * 0.7)
@@ -197,7 +216,7 @@
                 .attr('font-weight', 500)
                 .attr('font-size', 80)
                 .text(years[0]);
-  
+
             // Add interaction:
             var update = (value) => {
                 // Update Scrubber text
