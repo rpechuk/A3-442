@@ -32,8 +32,12 @@
                     <div class="col-lg-8">
                         <h2>Replace Me with a title for the visualization</h2>
                         <p class="lead">Add some further description here if you see fit:</p>
-                        <div id="scrubber">
-                            <p class="lead" id="scrubber-text">Year: <span id="year">0</span></p>
+                        <div id="scrubber-container">
+                            <p class="lead">Year: <span id="year">0</span></p>
+                            <div id="scrubber"></div>
+                            <button type="button" class="btn-primary btn" id="playPause">
+                                Play
+                            </button>
                         </div>
                         <div id="graph"></div>
                         <div id="tooltip" class="hidden">
@@ -75,6 +79,8 @@
             const colorStart = 80;
             const colorEnd = 225;
 
+            const msDelay = 1000
+
             // Data import:
             const dt = await aq.loadCSV('/assets/International_Report_Passengers.csv');
             // Get extents:
@@ -102,7 +108,7 @@
             var scrubber = new ScrubberView();
             // Change settings
             scrubber.min(years[0]).max(years[1]).step(stepSize).value(scrubber.min());
-            d3.select("#scrubber").select("#year").text(scrubber.value());
+            d3.select("#year").text(scrubber.value());
             // Add to DOM
             document.getElementById("scrubber").appendChild(scrubber.elt);
 
@@ -193,9 +199,9 @@
                 .text(years[0]);
   
             // Add interaction:
-            scrubber.onScrubEnd = function (value) {
+            var update = (value) => {
                 // Update Scrubber text
-                d3.select("#scrubber").select("#year").text(value);
+                d3.select("#year").text(value);
                 // Update dataset
                 dataset = datasetAll.filter(d => d.Year === value);
                 // Update extent
@@ -216,7 +222,7 @@
                 svg.selectAll("rect")
                     .data(dataset)
                     .transition()
-                        .duration(1000)
+                        .duration(msDelay)
                         .attr("y", function(d) {
                                 return yScale(d.Destination);
                         })
@@ -229,16 +235,41 @@
                 // Update axis
                 svg.select("#xAxis")
                     .transition()
-                    .duration(1000)
+                    .duration(msDelay)
                     .call(d3.axisBottom().scale(xScale));
                 svg.select("#yAxis")
                     .transition()
-                    .duration(1000)
+                    .duration(msDelay)
                     .call(d3.axisLeft().scale(yScale));
                 // Update label
                 yearLabel.transition().text(value);
             }
-
+            scrubber.onScrubEnd = function (value) {
+                update(value);
+            }
+            // play functionality
+            var interval = null;
+            var play = () => {
+                var newVal = scrubber.value() + 1;
+                if (newVal >= years[1]) {
+                    clearInterval(interval)
+                    interval = null;
+                    d3.select("#playPause").text("Play")
+                }else {
+                    scrubber.value(newVal);
+                    update(newVal);
+                }
+            }
+            d3.select("#playPause").on("click", () => {
+                if (interval == null) {
+                    interval = setInterval(play, msDelay);
+                    d3.select("#playPause").text("Stop")
+                } else {
+                    clearInterval(interval)
+                    interval = null;
+                    d3.select("#playPause").text("Play")
+                }
+            });
         </script>
         <!-- Arquero import -->
         <script src="https://cdn.jsdelivr.net/npm/arquero@latest"></script>

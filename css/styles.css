@@ -1,20 +1,28 @@
 @charset "UTF-8";
 
-#scrubber {
+#scrubber-container {
   display: flex;
   justify-content: start;
   align-items: center;
   flex-direction: row;
 }
 
-#scrubber-text {
-  width: 150px;
+#scrubber-container > * {
+  margin-top: 0px;
+  margin-bottom: 0px;
 }
 
 #scrubber > * {
   margin-top: 0px;
   margin-bottom: 0px;
-  padding-right: 5%;
+}
+
+#scrubber-container > p {
+  width: 125px;
+}
+
+#scrubber-container > button {
+  margin: 15px;
 }
 
 rect:hover {
