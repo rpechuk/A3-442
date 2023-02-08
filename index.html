@@ -117,7 +117,7 @@
             }
 
             // Data import:
-            const dt = await aq.loadCSV('/assets/International_Report_Passengers.csv');
+            const dt = await aq.loadCSV('/assets/International_Report_Passengers_with_Continent.csv');
             // Get extents:
             const years = d3.extent(dt.objects(), d => d.Year);
             // Data Transformations:
@@ -125,17 +125,19 @@
             for(var i = 0; i <= years[1] - years[0]; i++) {
                 var year = years[0] + i;
                 var dtNew = dt.filter(aq.escape(d => d.Year == year))
-                    .groupby("Destination")
+                    .groupby("Destination", "Country", "Continent")
                     .rollup({
                         total_passengers: d => op.sum(d.Passengers),
                         count: aq.op.count()
+
                     })
                     .derive({
                         Year: year
                     })
                     .orderby(aq.desc('total_passengers'))
                     .slice(0, topX);
-                    datasetAll = datasetAll.concat(dtNew.objects());
+
+                datasetAll = datasetAll.concat(dtNew.objects());
             }
             console.log(datasetAll);
 
@@ -203,13 +205,14 @@
                 .attr('fill', 'rgb(33, 37, 41)')
                 .attr('font-family', 'Helvetica Neue, Arial')
                 .attr('font-size', '14px')
+                .attr('pointer-events', 'none')
                 .attr("x", function(d) {
                         return xScale(d.total_passengers) - 10;
                 })
                 .attr("y", function(d) {
                         return yScale(d.Destination) + yScale.bandwidth() - 8;
                 })
-                .text((d) => {return d.Destination});
+                .text((d) => {return d.Country});
 
             // Create axis
             svg.append("g")
@@ -315,6 +318,7 @@
                 text.enter()
                     .append("text")
                     .attr("id", "labelText")
+                    .attr('pointer-events', 'none')
                     .attr('text-anchor', 'end')
                     .attr('fill', 'rgb(33, 37, 41)')
                     .attr('font-family', 'Helvetica Neue, Arial')
@@ -326,7 +330,7 @@
                     .attr("y", function(d) {
                             return h - padding;
                     })
-                    .text((d) => {return d.Destination})
+                    .text((d) => {return d.Country})
                     .merge(text)
                     .transition()
                         .duration(msDelay)
@@ -337,7 +341,7 @@
                                 return yScale(d.Destination) + yScale.bandwidth() - 8;
                         })
                         .attr('fill-opacity', '100')
-                        .text((d) => {return d.Destination});
+                        .text((d) => {return d.Country});
                 // Update axis
                 svg.select("#xAxis")
                     .transition()
