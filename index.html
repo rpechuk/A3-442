@@ -5,7 +5,7 @@
         <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
         <meta name="description" content="" />
         <meta name="author" content="" />
-        <title>Scrolling Nav - Start Bootstrap Template</title>
+        <title>A3</title>
         <!-- Core theme CSS (includes Bootstrap)-->
         <link href="css/styles.css" rel="stylesheet" />
         <!-- Scrubber theme -->
@@ -33,7 +33,17 @@
                         <h2>Replace Me with a title for the visualization</h2>
                         <p class="lead">Add some further description here if you see fit:</p>
                         <div id="scrubber-container">
-                            <p class="lead">Year: <span id="year">0</span></p>
+                            <button type="button" class="btn-primary btn" id="back">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-caret-left-fill" viewBox="0 0 16 16">
+                                    <path d="m3.86 8.753 5.482 4.796c.646.566 1.658.106 1.658-.753V3.204a1 1 0 0 0-1.659-.753l-5.48 4.796a1 1 0 0 0 0 1.506z"/>
+                                  </svg>
+                            </button>
+                            <p class="lead" style="width: 96px">Year: <span id="year">0</span></p>
+                            <button type="button" class="btn-primary btn" id="forward">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-caret-right-fill" viewBox="0 0 16 16">
+                                    <path d="m12.14 8.753-5.482 4.796c-.646.566-1.658.106-1.658-.753V3.204a1 1 0 0 1 1.659-.753l5.48 4.796a1 1 0 0 1 0 1.506z"/>
+                                  </svg>
+                            </button>
                             <div id="scrubber"></div>
                             <button type="button" class="btn-primary btn" id="playPause">
                                 Play
@@ -81,6 +91,31 @@
 
             const msDelay = 1000
 
+            const key = function(d) {
+				return d.Destination;
+			};
+
+            const showTooltip = function(d) {
+                // Get this bar's x/y values, then augment for the tooltip
+                var yPosition = parseFloat(d3.select(this).attr("y")) + (7 * yScale.bandwidth());
+                var xPosition = parseFloat(d3.select(this).attr("x")) + parseFloat(d3.select(this).attr("width")) + w / 4;
+
+                // Update the tooltip position
+                var tooltip = d3.select("#tooltip")
+                    .style("left", xPosition + "px")
+                    .style("top", yPosition + "px");
+
+                // Update the tooltip text                
+                tooltip.select("#airport")
+                    .text(d.srcElement.__data__.Destination);
+                tooltip.select("#flights")
+                    .text(d.srcElement.__data__.total_passengers.toLocaleString("en-US"));
+
+                //Show the tooltip
+                d3.select("#tooltip").classed("hidden", false);
+
+            }
+
             // Data import:
             const dt = await aq.loadCSV('/assets/International_Report_Passengers.csv');
             // Get extents:
@@ -108,6 +143,7 @@
             var scrubber = new ScrubberView();
             // Change settings
             scrubber.min(years[0]).max(years[1]).step(stepSize).value(scrubber.min());
+            scrubber.elt.style.width = "300px";
             d3.select("#year").text(scrubber.value());
             // Add to DOM
             document.getElementById("scrubber").appendChild(scrubber.elt);
@@ -138,7 +174,7 @@
                         .attr("height", h);
             // Create bars
             svg.selectAll("rect")
-                .data(dataset)
+                .data(dataset, key)
                 .join("rect")
                 .attr("x", function(d) {
                         return padding;
@@ -153,58 +189,48 @@
                 .attr("fill", function(d) {
                         return color(colorScale, d.total_passengers);
                 })
-                .on("mouseover", function(d) {
-                        // Get this bar's x/y values, then augment for the tooltip
-                        var yPosition = parseFloat(d3.select(this).attr("y")) + (6 * yScale.bandwidth());
-                        var xPosition = parseFloat(d3.select(this).attr("x")) + parseFloat(d3.select(this).attr("width")) + w / 4;
-
-                        // Update the tooltip position
-                        var tooltip = d3.select("#tooltip")
-                            .style("left", xPosition + "px")
-                            .style("top", yPosition + "px");
-
-                        // Update the tooltip text                
-                        tooltip.select("#airport")
-                            .text(d.srcElement.__data__.Destination);
-                        tooltip.select("#flights")
-                            .text(d.srcElement.__data__.total_passengers.toLocaleString("en-US"));
-
-                        //Show the tooltip
-                        d3.select("#tooltip").classed("hidden", false);
-
-                })
+                .on("mouseover", showTooltip)
                 .on("mouseout", function() {
                         //Hide the tooltip
                         d3.select("#tooltip").classed("hidden", true);
                 });
+            // and bar labels
+            svg.selectAll("text")
+                .data(dataset, key)
+                .join("text")
+                .attr("id", "labelText")
+                .attr('text-anchor', 'end')
+                .attr('fill', 'rgb(33, 37, 41)')
+                .attr('font-family', 'Helvetica Neue, Arial')
+                .attr('font-size', '14px')
+                .attr("x", function(d) {
+                        return xScale(d.total_passengers) - 10;
+                })
+                .attr("y", function(d) {
+                        return yScale(d.Destination) + yScale.bandwidth() - 8;
+                })
+                .text((d) => {return d.Destination});
+
             // Create axis
             svg.append("g")
-                    .attr("id", "xAxis")
-                    .attr("transform", "translate(0," + (h - padding) + ")")
-                    .call(d3.axisBottom().scale(xScale))
-                    //Add x-axis label
-                    .append('text')
-                    .attr('text-anchor', 'end')
-                    .attr('fill', 'black')
-                    .attr('font-size', '18px')
-                    .attr('font-weight', '550')
-                    .attr('x', w / 2 + padding)
-                    .attr('y', 45)
-                    .text('Passengers');
-    ;
-
-            svg.append("g")
-                .attr("id", "yAxis")
-                .attr("transform", "translate(" + padding + ",0)")
-                .call(d3.axisLeft().scale(yScale))
-                //Add y-axis label
+                .attr("id", "xAxis")
+                .attr("transform", "translate(0," + (h - padding) + ")")
+                .call(d3.axisBottom().scale(xScale))
+                //Add x-axis label
                 .append('text')
-                .attr('transform', `translate(-45 ${h/2 - padding}) rotate(-90)`)
                 .attr('text-anchor', 'end')
                 .attr('fill', 'black')
                 .attr('font-size', '18px')
                 .attr('font-weight', '550')
-                .text('Airport Code');;
+                .attr('x', w / 2 + padding)
+                .attr('y', 45)
+                .text('Passengers');
+;
+
+            svg.append("g")
+                .attr("id", "yAxis")
+                .attr("transform", "translate(" + padding + ",0)")
+                .call(d3.axisLeft().scale(yScale).tickValues([]))
             
             // Create year label
             const yearLabel = svg.append('text')
@@ -238,8 +264,34 @@
                     .domain([0, d3.max(dataset, d => d.total_passengers)])
                     .range([colorStart, colorEnd]);        
                 // Update bars
-                svg.selectAll("rect")
-                    .data(dataset)
+                var bars = svg.selectAll("rect")
+						.data(dataset, key);
+                bars.exit()
+                    .transition()
+                    .duration(1000)
+                    .attr("width", 0) 
+                    .remove();
+                bars.enter()
+                    .append("rect")
+                    .attr("x", function(d) {
+                        return padding;
+                    })
+                    .attr("y", function(d) {
+                            return h - padding - yScale.bandwidth();
+                    })
+                    .attr("width", function(d) {
+                            return 0;
+                    })
+                    .attr("height", yScale.bandwidth())
+                    .attr("fill", function(d) {
+                            return color(colorScale, d.total_passengers);
+                    })
+                    .on("mouseover", showTooltip)
+                    .on("mouseout", function() {
+                            //Hide the tooltip
+                            d3.select("#tooltip").classed("hidden", true);
+                    })
+                    .merge(bars)
                     .transition()
                         .duration(msDelay)
                         .attr("y", function(d) {
@@ -251,15 +303,47 @@
                         .attr("fill", function(d) {
                                 return color(colorScale, d.total_passengers);
                         })
+                // and bar labels
+                var text = svg.selectAll("#labelText")
+                    .data(dataset, key);
+                text.exit()
+                    .transition()
+                    .duration(1000)
+                    .attr('fill-opacity', '-100')
+                    .attr("x", padding) 
+                    .remove();
+                text.enter()
+                    .append("text")
+                    .attr("id", "labelText")
+                    .attr('text-anchor', 'end')
+                    .attr('fill', 'rgb(33, 37, 41)')
+                    .attr('font-family', 'Helvetica Neue, Arial')
+                    .attr('font-size', '14px')
+                    .attr('fill-opacity', '-100')
+                    .attr("x", function(d) {
+                            return padding;
+                    })
+                    .attr("y", function(d) {
+                            return h - padding;
+                    })
+                    .text((d) => {return d.Destination})
+                    .merge(text)
+                    .transition()
+                        .duration(msDelay)
+                        .attr("x", function(d) {
+                                return xScale(d.total_passengers) - 10;
+                        })
+                        .attr("y", function(d) {
+                                return yScale(d.Destination) + yScale.bandwidth() - 8;
+                        })
+                        .attr('fill-opacity', '100')
+                        .text((d) => {return d.Destination});
                 // Update axis
                 svg.select("#xAxis")
                     .transition()
                     .duration(msDelay)
                     .call(d3.axisBottom().scale(xScale));
-                svg.select("#yAxis")
-                    .transition()
-                    .duration(msDelay)
-                    .call(d3.axisLeft().scale(yScale));
+
                 // Update label
                 yearLabel.transition().text(value);
             }
@@ -270,7 +354,7 @@
             var interval = null;
             var play = () => {
                 var newVal = scrubber.value() + 1;
-                if (newVal >= years[1]) {
+                if (newVal > years[1]) {
                     clearInterval(interval)
                     interval = null;
                     d3.select("#playPause").text("Play")
@@ -287,6 +371,22 @@
                     clearInterval(interval)
                     interval = null;
                     d3.select("#playPause").text("Play")
+                }
+            });
+
+            d3.select("#forward").on("click", () => {
+                var value = scrubber.value();
+                if (value < years[1]) {
+                    update(value + 1);
+                    scrubber.value(value + 1);
+                }
+            });
+
+            d3.select("#back").on("click", () => {
+                var value = scrubber.value();
+                if (value > years[0]) {
+                    update(value - 1);
+                    scrubber.value(value - 1);
                 }
             });
         </script>

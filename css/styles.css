@@ -17,12 +17,8 @@
   margin-bottom: 0px;
 }
 
-#scrubber-container > p {
-  width: 125px;
-}
-
 #scrubber-container > button {
-  margin: 15px;
+  margin: 10px;
 }
 
 rect:hover {
@@ -44,7 +40,7 @@ rect:hover {
   pointer-events: none;
 }
 
-#tooltip.hidden {
+#tooltip.hidden ,#play.hidden, #stop.hidden {
   display: none;
 }
 
