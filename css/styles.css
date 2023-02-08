@@ -1,24 +1,28 @@
 @charset "UTF-8";
 
-#scrubber {
+#scrubber-container {
   display: flex;
   justify-content: start;
   align-items: center;
   flex-direction: row;
 }
 
-#scrubber-text {
-  width: 150px;
+#scrubber-container > * {
+  margin-top: 0px;
+  margin-bottom: 0px;
 }
 
 #scrubber > * {
   margin-top: 0px;
   margin-bottom: 0px;
-  padding-right: 5%;
+}
+
+#scrubber-container > button {
+  margin: 10px;
 }
 
 rect:hover {
-  fill: orange;
+  fill: #fd7e14;
 }
 
 #tooltip {
@@ -36,7 +40,7 @@ rect:hover {
   pointer-events: none;
 }
 
-#tooltip.hidden {
+#tooltip.hidden ,#play.hidden, #stop.hidden {
   display: none;
 }
 
