@@ -30,8 +30,7 @@
             <div class="container px-4">
                 <div class="row gx-4 justify-content-center">
                     <div class="col-lg-8">
-                        <h2>Replace Me with a title for the visualization</h2>
-                        <p class="lead">Add some further description here if you see fit:</p>
+                        <h2 class="graph-title">Top 15 Most Popular International Flight Destinations From The US From 1990 to 2020</h2>
                         <div id="scrubber-container">
                             <button type="button" class="btn-primary btn" id="back">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-caret-left-fill" viewBox="0 0 16 16">
@@ -82,6 +81,8 @@
             const w = 850;
             const h = 550;
             const padding = 65;
+            const barPadding = 0;
+            const topPadding = 50;
 
             const topX = 15;
             const stepSize = 1;
@@ -185,15 +186,6 @@
             }
             console.log(datasetAll);
 
-            // Create scrubber:
-            var scrubber = new ScrubberView();
-            // Change settings
-            scrubber.min(years[0]).max(years[1]).step(stepSize).value(scrubber.min());
-            scrubber.elt.style.width = "300px";
-            d3.select("#year").text(scrubber.value());
-            // Add to DOM
-            document.getElementById("scrubber").appendChild(scrubber.elt);
-
             // Get starting dataset and corresponding information:
             var dataset = datasetAll.filter(d => d.Year === years[0]);
             var destinations = [...new Set(dataset.map(d => d.Destination))]
@@ -223,13 +215,14 @@
                         .append("svg")
                         .attr("width", w)
                         .attr("height", h);
+
             // Create bars
             svg.selectAll("rect")
                 .data(dataset, key)
                 .join("rect")
                 .attr("id", "bar")
                 .attr("x", function(d) {
-                        return padding;
+                        return padding + barPadding;
                 })
                 .attr("y", function(d) {
                         return yScale(d.Destination);
@@ -259,7 +252,7 @@
                 .attr('pointer-events', 'none')
                 .attr("clip-path", "url(#chart-area)")
                 .attr("x", function(d) {
-                        return xScale(d.total_passengers) - 10;
+                        return barPadding + xScale(d.total_passengers) - 10;
                 })
                 .attr("y", function(d) {
                         return yScale(d.Destination) + yScale.bandwidth() - 8;
@@ -278,7 +271,7 @@
             // Create axis
             svg.append("g")
                 .attr("id", "xAxis")
-                .attr("transform", "translate(0," + (h - padding) + ")")
+                .attr("transform", "translate(" + barPadding + "," + (h - padding) + ")")
                 .call(d3.axisBottom().scale(xScale))
                 //Add x-axis label
                 .append('text')
@@ -286,13 +279,22 @@
                 .attr('fill', 'black')
                 .attr('font-size', '18px')
                 .attr('font-weight', '550')
-                .attr('x', w / 2 + padding)
+                .attr('x', w / 2 + padding + barPadding)
                 .attr('y', 45)
                 .text('Number of Passengers');
 
+            // Create text for the y-axis
+            svg.append("text")
+                .text("Destination Countries")
+                .attr("transform", "translate(15, " + (h/2 - padding) + ") rotate(-90)")
+                .attr("fill", "black")
+                .attr("font-size", "18px")
+                .attr("font-weight", "bold")
+                .attr("text-anchor", "end");
+
             svg.append("g")
                 .attr("id", "yAxis")
-                .attr("transform", "translate(" + padding + ",0)")
+                .attr("transform", "translate(" + (padding + barPadding) + ",0)")
                 .call(d3.axisLeft().scale(yScale).tickValues([]));
 
             // Create legend
@@ -309,6 +311,15 @@
                 .attr('font-weight', 500)
                 .attr('font-size', 80)
                 .text(years[0]);
+
+            // Create scrubber:
+            var scrubber = new ScrubberView();
+            // Change settings
+            scrubber.min(years[0]).max(years[1]).step(stepSize).value(scrubber.min());
+            scrubber.elt.style.width = "300px";
+            d3.select("#year").text(scrubber.value());
+            // Add to DOM
+            document.getElementById("scrubber").appendChild(scrubber.elt);
 
             // Add interaction:
             var update = (value) => {

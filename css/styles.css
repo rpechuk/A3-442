@@ -1,8 +1,14 @@
 @charset "UTF-8";
 
+#graph-title {
+  text-align: center;
+  justify-content: center;
+  
+}
+
 #scrubber-container {
   display: flex;
-  justify-content: start;
+  justify-content: center;
   align-items: center;
   flex-direction: row;
 }
