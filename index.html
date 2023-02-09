@@ -160,9 +160,10 @@
             }
 
             // Data import:
-            const dt = await aq.loadCSV('/assets/International_Report_Passengers_with_Continent.csv');
+            const dt = await aq.loadCSV('./assets/International_Report_Passengers_with_Continent.csv');
             // Get extents:
             const years = d3.extent(dt.objects(), d => d.Year);
+            
             // Data Transformations:
             var datasetAll = [];
             for(var i = 0; i <= years[1] - years[0]; i++) {
@@ -287,13 +288,13 @@
                 .attr('font-weight', '550')
                 .attr('x', w / 2 + padding)
                 .attr('y', 45)
-                .text('Passengers');
-;
+                .text('Number of Passengers');
 
             svg.append("g")
                 .attr("id", "yAxis")
                 .attr("transform", "translate(" + padding + ",0)")
-                .call(d3.axisLeft().scale(yScale).tickValues([]))
+                .call(d3.axisLeft().scale(yScale).tickValues([]));
+
             // Create legend
             const legend = svg.append('g')
                 .attr('transform', 'translate(' + (w - 3 * padding) + ',' + (h - 4 * padding) + ')')
