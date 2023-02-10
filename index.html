@@ -30,7 +30,8 @@
             <div class="container px-4">
                 <div class="row gx-4 justify-content-center">
                     <div class="col-lg-8">
-                        <h2 class="graph-title">Top 15 Most Popular International Flight Destinations From The US From 1990 to 2020</h2>
+                        <h2>Top 15 Most Popular International Flight Destinations From The US From 1990 to 2020</h2>
+                        <p>Question: How did the most popular international destinations from the US change over the years?</p>
                         <div id="scrubber-container">
                             <button type="button" class="btn-primary btn" id="back">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-caret-left-fill" viewBox="0 0 16 16">
@@ -57,6 +58,17 @@
                 </div>
             </div>
         </section>
+        <div style="text-align: center; display: grid;">
+            <p>Source:</p>
+            <a href="https://www.kaggle.com/datasets/parulpandey/us-international-air-traffic-data?select=International_Report_Passengers.csv">U.S. International Air Traffic data(1990-2020)</a>
+            <a href="https://www.nationsonline.org/oneworld/IATA_Codes/airport_code_list.htm">Airport Codes Map To Country Name</a>
+            <a href="https://worldpopulationreview.com/country-rankings/list-of-countries-by-continent">List Of Countries By Continent</a>
+        </div>
+        <div style="margin-left: 20%; margin-right: 20%;">
+            <p>Note: Data from Kaggle of all international flights departing from the U.S. between 1990 and 2020 is being used to map destination airports to their respective countries and continents using the IATA code associated with each airport. The graph then filters this data to find the top 15 most popular international airports for each year. However, some data entries are excluded from the original table due to various reasons: (1) they are private airports used for military and private business purposes, (2) the number of passengers for those flights is too small to affect the final result of the top 15 most popular international airports, and (3) there is no free and reliable database that maps public and private airport codes to their countries and/or continents.
+            </p>
+        </div>
+
         <!-- Writeup section-->
         <section class="bg-light" id="writeup">
             <div class="container px-4">

@@ -1,11 +1,5 @@
 @charset "UTF-8";
 
-#graph-title {
-  text-align: center;
-  justify-content: center;
-  
-}
-
 #scrubber-container {
   display: flex;
   justify-content: center;
@@ -136,7 +130,6 @@ body {
   font-weight: var(--bs-body-font-weight);
   line-height: var(--bs-body-line-height);
   color: var(--bs-body-color);
-  text-align: var(--bs-body-text-align);
   background-color: var(--bs-body-bg);
   -webkit-text-size-adjust: 100%;
   -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
@@ -171,8 +164,11 @@ h1, .h1 {
 }
 
 h2, .h2 {
-  font-size: calc(1.325rem + 0.9vw);
+  text-align: center;
+  font-weight: bold;
+  justify-content: center;
 }
+
 @media (min-width: 1200px) {
   h2, .h2 {
     font-size: 2rem;
@@ -203,6 +199,13 @@ h5, .h5 {
 
 h6, .h6 {
   font-size: 1rem;
+}
+
+p, .caption {
+  font-family: 'Times New Roman', Times, serif;
+  font-size: 12px;
+  text-align: center;
+
 }
 
 p {
@@ -11345,10 +11348,8 @@ html {
 
 header {
   padding-top: 9.5rem;
-  padding-bottom: 6rem;
 }
 
 section {
   padding-top: 6rem;
-  padding-bottom: 6rem;
 }
